@@ -1,0 +1,71 @@
+# Directory tree, service account and demo users for dc=kandang,dc=local
+# uid values equal the fixed ids in fin-pro/backend/src/database/seeders/20261011000001-demo-data.js
+# Demo passwords: service-secret · Admin12345 · User12345 (hashes made with: npm run ldap:hash -- "<password>")
+# Production: replace every userPassword with a new hash and use the UUIDs from booking_db on the VPS
+
+dn: ou=people,dc=kandang,dc=local
+objectClass: organizationalUnit
+ou: people
+
+dn: ou=groups,dc=kandang,dc=local
+objectClass: organizationalUnit
+ou: groups
+
+dn: ou=services,dc=kandang,dc=local
+objectClass: organizationalUnit
+ou: services
+
+dn: cn=auth-service,ou=services,dc=kandang,dc=local
+objectClass: simpleSecurityObject
+objectClass: organizationalRole
+cn: auth-service
+description: Service account used by sso-pro auth-service
+userPassword: {SSHA}hjmnn5NtEE0DJHmKh8HQsY66+nM0cG5MBSaCUw==
+
+dn: uid=0a000000-0000-4000-8000-000000000001,ou=people,dc=kandang,dc=local
+objectClass: inetOrgPerson
+uid: 0a000000-0000-4000-8000-000000000001
+cn: Admin Booking
+sn: Booking
+mail: admin@booking.com
+telephoneNumber: 081100000001
+employeeNumber: 900001
+userPassword: {SSHA}ClwLLFa151rpKpND35KS3ue8euTD7jpsZ+g9hA==
+
+dn: uid=0a000000-0000-4000-8000-000000000002,ou=people,dc=kandang,dc=local
+objectClass: inetOrgPerson
+uid: 0a000000-0000-4000-8000-000000000002
+cn: Budi Santoso
+sn: Santoso
+mail: budi@example.com
+telephoneNumber: 081234567890
+userPassword: {SSHA}V0/bdfY6fp+KpNvFQN4Jeq8Rorb8ZrCSUNviRQ==
+
+dn: uid=0a000000-0000-4000-8000-000000000003,ou=people,dc=kandang,dc=local
+objectClass: inetOrgPerson
+uid: 0a000000-0000-4000-8000-000000000003
+cn: Siti Rahma
+sn: Rahma
+mail: siti@example.com
+telephoneNumber: 081298765432
+userPassword: {SSHA}V0/bdfY6fp+KpNvFQN4Jeq8Rorb8ZrCSUNviRQ==
+
+dn: cn=admins,ou=groups,dc=kandang,dc=local
+objectClass: groupOfNames
+cn: admins
+description: Role ADMIN in booking and POS
+member: uid=0a000000-0000-4000-8000-000000000001,ou=people,dc=kandang,dc=local
+
+dn: cn=customers,ou=groups,dc=kandang,dc=local
+objectClass: groupOfNames
+cn: customers
+description: Role USER in booking and POS
+member: uid=0a000000-0000-4000-8000-000000000002,ou=people,dc=kandang,dc=local
+member: uid=0a000000-0000-4000-8000-000000000003,ou=people,dc=kandang,dc=local
+
+# groupOfNames needs at least one member, so the empty group holds the service account
+dn: cn=disabled,ou=groups,dc=kandang,dc=local
+objectClass: groupOfNames
+cn: disabled
+description: Members cannot log in to any application
+member: cn=auth-service,ou=services,dc=kandang,dc=local

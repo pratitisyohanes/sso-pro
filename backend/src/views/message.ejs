@@ -1,0 +1,5 @@
+<%- include('partials/top', { title: title }) %>
+    <h1><%= title %></h1>
+    <div class="alert<%= tone === 'ok' ? ' ok' : '' %>" role="<%= tone === 'ok' ? 'status' : 'alert' %>"><%= message %></div>
+    <a class="button secondary" href="/">Go to KandangID home</a>
+<%- include('partials/bottom') %>

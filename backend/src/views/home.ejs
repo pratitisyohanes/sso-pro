@@ -1,0 +1,28 @@
+<%- include('partials/top', { title: 'Account' }) %>
+    <% if (session) { %>
+      <h1>You are logged in</h1>
+      <div class="who">
+        <strong><%= session.name %></strong>
+        <span class="sub" style="margin:0"><%= session.email %> <span class="badge"><%= session.role %></span></span>
+      </div>
+      <p class="sub" style="margin:0">Open any app below; it will not ask for your password again.</p>
+    <% } else { %>
+      <h1>KandangID</h1>
+      <p class="sub">Log in once to use every KandangMart app.</p>
+    <% } %>
+
+    <% if (apps.length) { %>
+      <ul class="apps">
+        <% apps.forEach(function (app) { %>
+          <li><a href="<%= app.url %>"><strong><%= app.name %></strong><span><%= app.url.replace(/^https?:\/\//, '') %></span></a></li>
+        <% }) %>
+      </ul>
+    <% } %>
+
+    <% if (session) { %>
+      <a class="button secondary" href="/oidc/logout">Log out of KandangID</a>
+    <% } else { %>
+      <a class="button" href="/login">Log in</a>
+      <p class="foot">No account yet? <a href="/register">Create one</a></p>
+    <% } %>
+<%- include('partials/bottom') %>

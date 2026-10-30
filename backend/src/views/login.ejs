@@ -1,0 +1,22 @@
+<%- include('partials/top', { title: 'Log in' }) %>
+    <h1>Log in</h1>
+    <p class="sub"><% if (appName) { %>to continue to <strong><%= appName %></strong><% } else { %>with your KandangMart account<% } %></p>
+
+    <% if (error) { %><div class="alert" role="alert"><%= error %></div><% } %>
+
+    <form method="post" action="/login" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <input type="hidden" name="return_to" value="<%= returnTo %>">
+      <label for="email">Email
+        <input id="email" name="email" type="email" autocomplete="username" value="<%= email || '' %>" required autofocus aria-invalid="<%= errors.email ? 'true' : 'false' %>">
+        <% if (errors.email) { %><span class="field-error"><%= errors.email %></span><% } %>
+      </label>
+      <label for="password">Password
+        <input id="password" name="password" type="password" autocomplete="current-password" required aria-invalid="<%= errors.password ? 'true' : 'false' %>">
+        <% if (errors.password) { %><span class="field-error"><%= errors.password %></span><% } %>
+      </label>
+      <button type="submit">Log in</button>
+    </form>
+
+    <p class="foot">No account yet? <a href="/register<%= returnTo !== '/' ? '?return_to=' + encodeURIComponent(returnTo) : '' %>">Create one</a></p>
+<%- include('partials/bottom') %>

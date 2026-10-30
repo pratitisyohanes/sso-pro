@@ -1,0 +1,31 @@
+<%- include('partials/top', { title: setup ? 'Set up two-factor login' : 'Two-factor verification' }) %>
+    <% if (setup) { %>
+      <h1>Set up two-factor login</h1>
+      <p class="sub">Admin accounts need a code from your phone in addition to the password.</p>
+      <ol class="steps">
+        <li>Open Google Authenticator or Microsoft Authenticator.</li>
+        <li>Scan this QR code, or type the key below.</li>
+        <li>Enter the 6-digit code the app shows.</li>
+      </ol>
+      <div class="qr">
+        <img src="<%= setup.qrCode %>" alt="QR code for <%= email %>">
+        <span class="secret"><%= setup.secret %></span>
+      </div>
+    <% } else { %>
+      <h1>Two-factor verification</h1>
+      <p class="sub">Enter the 6-digit code from your authenticator app for <strong><%= email %></strong>.</p>
+    <% } %>
+
+    <% if (error) { %><div class="alert" role="alert"><%= error %></div><% } %>
+
+    <form method="post" action="/mfa" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <input type="hidden" name="return_to" value="<%= returnTo %>">
+      <label for="code">Verification code
+        <input id="code" name="code" class="code-input" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required autofocus>
+      </label>
+      <button type="submit"><%= setup ? 'Turn on and continue' : 'Verify' %></button>
+    </form>
+
+    <p class="foot"><a href="/login<%= returnTo !== '/' ? '?return_to=' + encodeURIComponent(returnTo) : '' %>">Use another account</a></p>
+<%- include('partials/bottom') %>

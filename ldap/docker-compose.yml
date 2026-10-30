@@ -1,0 +1,30 @@
+# OpenLDAP for the laptop only; the VPS uses the native slapd package instead (lighter on 1 GB RAM)
+# Start: docker compose up -d  ·  UI: http://localhost:8090 (login DN cn=admin,dc=kandang,dc=local)
+services:
+  openldap:
+    image: osixia/openldap:1.5.0
+    container_name: kandang-ldap
+    environment:
+      LDAP_ORGANISATION: KandangMart
+      LDAP_DOMAIN: kandang.local            # root becomes dc=kandang,dc=local
+      LDAP_ADMIN_PASSWORD: admin-local-only # admin DN: cn=admin,dc=kandang,dc=local
+    ports:
+      - "127.0.0.1:389:389"                 # reachable from this laptop only
+    volumes:
+      - ldap_data:/var/lib/ldap
+      - ldap_config:/etc/ldap/slapd.d
+      - ./ldif:/ldif:ro
+
+  phpldapadmin:
+    image: osixia/phpldapadmin:0.9.0
+    container_name: kandang-ldap-admin
+    environment:
+      PHPLDAPADMIN_LDAP_HOSTS: openldap
+      PHPLDAPADMIN_HTTPS: "false"
+    ports:
+      - "127.0.0.1:8090:80"
+    depends_on: [openldap]
+
+volumes:
+  ldap_data:
+  ldap_config:

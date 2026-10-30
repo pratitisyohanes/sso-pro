@@ -1,0 +1,52 @@
+{
+  "name": "sso-api",
+  "version": "1.0.0",
+  "description": "KandangID auth-service: LDAP password check for booking-api and OpenID Connect single sign-on for the Booking and POS apps",
+  "main": "src/server.js",
+  "private": true,
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "jest --runInBand",
+    "db:migrate": "sequelize-cli db:migrate",
+    "db:migrate:undo": "sequelize-cli db:migrate:undo:all",
+    "keys:generate": "node scripts/generate-keys.js",
+    "client:create": "node scripts/create-client.js",
+    "client:web": "node scripts/create-web-client.js",
+    "ldap:hash": "node scripts/hash-password.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "setupFiles": [
+      "<rootDir>/tests/setup.js"
+    ]
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.6.1",
+    "ejs": "^3.1.10",
+    "express": "^4.22.3",
+    "express-rate-limit": "^7.5.1",
+    "helmet": "^8.3.0",
+    "jose": "^5.10.0",
+    "ldapts": "^9.2.0",
+    "morgan": "^1.12.1",
+    "otplib": "^12.0.1",
+    "pg": "^8.23.1",
+    "pg-hstore": "^2.3.4",
+    "qrcode": "^1.5.4",
+    "sequelize": "^6.37.8",
+    "sequelize-cli": "^6.6.5",
+    "swagger-ui-express": "^5.0.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.14",
+    "supertest": "^7.3.1"
+  }
+}
