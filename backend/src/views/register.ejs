@@ -16,7 +16,7 @@
         <% if (errors.email) { %><span class="field-error"><%= errors.email %></span><% } %>
       </label>
       <label for="phone">Phone <span class="hint">optional</span>
-        <input id="phone" name="phone" type="tel" autocomplete="tel" value="<%= values.phone || '' %>" aria-invalid="<%= errors.phone ? 'true' : 'false' %>">
+        <input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="081234567890, or leave empty" value="<%= values.phone || '' %>" aria-invalid="<%= errors.phone ? 'true' : 'false' %>">
         <% if (errors.phone) { %><span class="field-error"><%= errors.phone %></span><% } %>
       </label>
       <label for="password">Password

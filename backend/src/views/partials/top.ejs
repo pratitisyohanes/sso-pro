@@ -33,6 +33,10 @@ label { display: grid; gap: 6px; font-size: 14px; font-weight: 600; }
 input { font: inherit; font-weight: 400; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--field); color: var(--fg); width: 100%; }
 input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
 input[aria-invalid="true"] { border-color: var(--err); }
+.pw { position: relative; display: block; }
+.pw input { padding-right: 68px; }
+.pw-toggle { position: absolute; top: 50%; right: 6px; transform: translateY(-50%); display: inline-block; padding: 5px 10px; font-size: 13px; background: transparent; color: var(--accent); }
+.pw-toggle:hover { background: var(--accent-soft); filter: none; }
 .field-error { color: var(--err); font-size: 12.5px; font-weight: 400; }
 .hint { color: var(--muted); font-size: 12.5px; font-weight: 400; }
 button, .button { font: inherit; font-weight: 600; border: 0; border-radius: 8px; padding: 11px 14px; background: var(--accent); color: var(--accent-fg); cursor: pointer; text-align: center; text-decoration: none; display: block; }
