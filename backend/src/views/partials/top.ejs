@@ -62,9 +62,29 @@ ol.steps { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14
 .apps a { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; text-decoration: none; color: var(--fg); }
 .apps a span { color: var(--muted); font-size: 13px; }
 .legal { text-align: center; font-size: 12px; color: var(--muted); margin: 0; }
+/* Photo pages (login, register). Wide screens: card on the left, whole photo on the right. Narrow screens: dimmed photo behind the card.
+   parallax.js moves every [data-depth] layer with the mouse; the layers are larger than their box so no edge shows. */
+body.has-photo { background: #17121f; }
+.photo-bg { position: fixed; inset: -40px; z-index: -3; background: url("/login-bg.png") center / cover no-repeat; filter: blur(22px) saturate(1.2); transition: transform .2s ease-out; will-change: transform; }
+.photo-shade { position: fixed; inset: 0; z-index: -2; background: linear-gradient(160deg, rgba(50, 30, 100, .6), rgba(15, 12, 25, .78)); }
+.photo-panel { display: none; }
+.photo-banner { height: 180px; border-radius: 14px; background: url("/login-bg.png") center 30% / cover no-repeat; box-shadow: 0 10px 40px rgba(0, 0, 0, .35); }
+body.has-photo .legal, body.has-photo .brand { color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, .6); }
+body.has-photo .card { box-shadow: 0 10px 40px rgba(0, 0, 0, .35); }
+@media (min-width: 900px) {
+  body.has-photo { grid-template-columns: 1fr 1fr; }
+  body.has-photo main { grid-column: 1; }
+  .photo-banner { display: none; }
+  .photo-panel { display: block; position: fixed; top: 0; right: 0; bottom: 0; width: 50vw; z-index: -1; overflow: hidden;
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 22%); mask-image: linear-gradient(to right, transparent, #000 22%); }
+  .photo-front { position: absolute; inset: -30px; background: url("/login-bg.png") center / cover no-repeat; transition: transform .2s ease-out; will-change: transform; }
+}
+@media (prefers-reduced-motion: reduce) { .photo-bg, .photo-front { transition: none; } }
 </style>
 </head>
-<body>
+<body<% if (locals.photoBg) { %> class="has-photo"<% } %>>
+<% if (locals.photoBg) { %><div class="photo-bg" data-depth="0.3" aria-hidden="true"></div><div class="photo-shade" aria-hidden="true"></div><div class="photo-panel" aria-hidden="true"><div class="photo-front" data-depth="1"></div></div><% } %>
 <main>
+  <% if (locals.photoBg) { %><div class="photo-banner" role="img" aria-label="" aria-hidden="true"></div><% } %>
   <div class="brand"><img class="mark" src="/logo.webp" alt=""><span>ELEFEZ FARM</span></div>
   <div class="card">
