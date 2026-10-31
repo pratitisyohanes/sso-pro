@@ -94,6 +94,7 @@ Create a test account on the KandangID register page (`/register`), or from eith
 | GET/POST | `/forgot` | browser | Asks for an email and sends a reset link; without `SMTP_HOST` it says to contact the administrator |
 | GET/POST | `/reset?token=…` | browser | Sets a new password from the emailed link; the link works once for 30 minutes |
 | GET/POST | `/account/password` | browser | Change password while logged in; other devices are logged out |
+| GET/POST | `/admin/users…` | browser (administrators) | Find an account, create its reset link, change its email |
 | GET | `/oidc/authorize` | browser | Start of the OIDC flow; an active session gets a code without a form |
 | POST | `/oidc/token` | web app (fetch) | `authorization_code` (PKCE) and `refresh_token` (rotation) |
 | GET | `/oidc/userinfo` | web app | Claims of the current access token |
@@ -120,6 +121,7 @@ In production Nginx (`deploy/nginx/sso.pratitis.net.conf`) answers 404 for `/oau
     ```
 
   - **With email** (Gmail): turn on 2-Step Verification, create an App Password at <https://myaccount.google.com/apppasswords>, then set `SMTP_HOST=smtp.gmail.com`, `SMTP_USER` and `SMTP_PASSWORD` (see `.env.example`) and restart. The page then asks for an email and sends the link itself: it expires after 30 minutes, an account gets at most 3 links per hour, and the page answers the same whether or not the email exists, so it cannot be used to find out who has an account.
+- **Administrator page** (`/admin/users`, the "Manage users" button on the KandangID home page): an administrator finds an account by name or email, creates a one-time reset link (60 minutes) to send to its owner, or changes its email, which also logs the account out everywhere. Access is checked against the directory on every request, so a demoted or deactivated admin loses it at once. Another administrator's account cannot be changed from the page; use `npm run user:reset-link` on the server for that. Every action is written to the audit log with the administrator who did it.
 - **Set a password directly** (the administrator types it, last resort):
 
 ```bash

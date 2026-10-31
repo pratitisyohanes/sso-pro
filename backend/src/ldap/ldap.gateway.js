@@ -1,4 +1,4 @@
-const { Client, EqualityFilter, Change, Attribute, InvalidCredentialsError } = require('ldapts');
+const { Client, EqualityFilter, OrFilter, PresenceFilter, SubstringFilter, Change, Attribute, InvalidCredentialsError } = require('ldapts');
 const env = require('../config/env');
 const { GROUPS, toAccess, roleGroup } = require('./ldap.roles');
 
@@ -113,10 +113,13 @@ const createPerson = ({ id, name, email, phone, passwordHash }) =>
   });
 
 // replace with an empty value list removes the attribute, which clears the phone number
-const updatePerson = (uid, { name, phone, passwordHash }) =>
+const updatePerson = (uid, { name, phone, email, passwordHash }) =>
   withClient(async (client) => {
     await bindService(client);
     const changes = [];
+    if (email !== undefined) {
+      changes.push(new Change({ operation: 'replace', modification: new Attribute({ type: 'mail', values: [email] }) }));
+    }
     if (name !== undefined) {
       changes.push(new Change({ operation: 'replace', modification: new Attribute({ type: 'cn', values: [name] }) }));
       changes.push(new Change({ operation: 'replace', modification: new Attribute({ type: 'sn', values: [lastName(name)] }) }));
@@ -174,7 +177,22 @@ const setAccess = (uid, { role, disabled }) =>
     return loadAccount(client, entry);
   });
 
+// Administrator search: part of a name or email (empty lists everyone), sorted by name and cut to `limit`.
+// SubstringFilter escapes * ( ) \ in the term, so it cannot change the filter
+const searchPeople = (term, limit = 20) =>
+  withClient(async (client) => {
+    await bindService(client);
+    const text = term.trim();
+    const filter = text
+      ? new OrFilter({ filters: [new SubstringFilter({ attribute: 'mail', any: [text] }), new SubstringFilter({ attribute: 'cn', any: [text] })] })
+      : new PresenceFilter({ attribute: 'uid' });
+    const { searchEntries } = await client.search(PEOPLE, { scope: 'one', filter, attributes: PERSON_ATTRIBUTES });
+
+    const sorted = searchEntries.sort((a, b) => String(first(a.cn)).localeCompare(String(first(b.cn))));
+    return Promise.all(sorted.slice(0, limit).map((entry) => loadAccount(client, entry)));
+  });
+
 // Health check: can the service account still bind?
 const ping = () => withClient(bindService);
 
-module.exports = { verifyCredentials, findById, findByEmail, createPerson, updatePerson, checkPassword, setAccess, ping };
+module.exports = { verifyCredentials, findById, findByEmail, searchPeople, createPerson, updatePerson, checkPassword, setAccess, ping };

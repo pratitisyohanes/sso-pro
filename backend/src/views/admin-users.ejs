@@ -1,0 +1,24 @@
+<%- include('partials/top', { title: 'Users' }) %>
+    <h1>Users</h1>
+    <p class="sub">Find an account to reset its password or change its email.</p>
+
+    <form method="get" action="/admin/users">
+      <label for="q">Name or email
+        <input id="q" name="q" type="search" value="<%= q %>" placeholder="Leave empty to list everyone" autofocus>
+      </label>
+      <button type="submit">Search</button>
+    </form>
+
+    <% if (people.length) { %>
+      <ul class="apps">
+        <% people.forEach(function (person) { %>
+          <li><a href="/admin/users/<%= person.id %>"><strong><%= person.name %></strong><span><%= person.email %><% if (person.role === 'ADMIN') { %> · admin<% } %><% if (person.disabled) { %> · deactivated<% } %></span></a></li>
+        <% }) %>
+      </ul>
+      <p class="hint">Shows up to 20 accounts. Type more of the name or email to narrow the list.</p>
+    <% } else { %>
+      <p class="sub">No account matches<% if (q) { %> "<%= q %>"<% } %>.</p>
+    <% } %>
+
+    <a class="button secondary" href="/">Back to ELEFEZ FARM home</a>
+<%- include('partials/bottom') %>

@@ -88,4 +88,4 @@ const changePassword = async (session, { currentPassword, newPassword }, context
   if (env.MAIL_ENABLED) sendInBackground(() => mailer.sendPasswordChanged({ to: session.email, name: session.name }));
 };
 
-module.exports = { createResetLink, requestReset, findValidReset, resetPassword, changePassword, LINK_MINUTES };
+module.exports = { createResetLink, requestReset, findValidReset, resetPassword, changePassword, endSessions, LINK_MINUTES };

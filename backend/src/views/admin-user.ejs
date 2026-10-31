@@ -1,0 +1,48 @@
+<%- include('partials/top', { title: target.name }) %>
+    <h1><%= target.name %></h1>
+    <div class="who">
+      <span class="sub" style="margin:0"><%= target.email %> <span class="badge"><%= target.role %></span><% if (target.disabled) { %> <span class="badge">DEACTIVATED</span><% } %></span>
+      <% if (target.phone) { %><span class="sub" style="margin:0"><%= target.phone %></span><% } %>
+    </div>
+
+    <% if (error) { %><div class="alert" role="alert"><%= error %></div><% } %>
+    <% if (notice) { %><div class="alert ok" role="status"><%= notice %></div><% } %>
+
+    <% if (link) { %>
+      <div class="section">
+        <div class="alert ok" role="status">Reset link created for <%= target.name %>. It works once, until <%= expiresAt.toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) %>. Send it only to the owner of the account.</div>
+        <input id="resetLink" type="text" value="<%= link %>" readonly aria-label="Reset link">
+        <button type="button" class="button secondary" data-copy="resetLink">Copy link</button>
+      </div>
+    <% } %>
+
+    <% if (canManage) { %>
+      <div class="section">
+        <h2>Reset password</h2>
+        <p class="hint">Creates a one-time link. The owner opens it and chooses the new password, so you never see it. Older links of this account stop working.</p>
+        <form method="post" action="/admin/users/<%= target.id %>/reset-link">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit">Create reset link</button>
+        </form>
+      </div>
+
+      <div class="section">
+        <h2>Change email</h2>
+        <p class="hint">The account is logged out everywhere and signs in with the new address.</p>
+        <form method="post" action="/admin/users/<%= target.id %>/email" novalidate>
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <label for="email">New email
+            <input id="email" name="email" type="email" autocomplete="off" value="<%= emailValue %>" required aria-invalid="<%= errors.email ? 'true' : 'false' %>">
+            <% if (errors.email) { %><span class="field-error"><%= errors.email %></span><% } %>
+          </label>
+          <button type="submit">Change email</button>
+        </form>
+      </div>
+    <% } else { %>
+      <div class="section">
+        <p class="hint">Administrator accounts are reset on the server, not here. Run <strong>npm run user:reset-link -- <%= target.email %></strong> on the VPS.</p>
+      </div>
+    <% } %>
+
+    <a class="button secondary" href="/admin/users">Back to users</a>
+<%- include('partials/bottom') %>

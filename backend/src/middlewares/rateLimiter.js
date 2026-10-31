@@ -29,6 +29,14 @@ const resetLimiter = createLimiter({
     res.status(429).render('message', { title: 'Too many attempts', message: 'Wait 15 minutes before trying again.', tone: 'error' }),
 });
 
+// Administrator actions come from a logged-in admin, so the limit is wider; it mainly stops a stolen session from sweeping every account
+const adminLimiter = createLimiter({
+  windowMinutes: 15,
+  limit: 60,
+  handler: (req, res) =>
+    res.status(429).render('message', { title: 'Too many attempts', message: 'Wait 15 minutes before trying again.', tone: 'error' }),
+});
+
 // Every caller is a server on 127.0.0.1, so limits are keyed by client and username instead of IP
 const tokenLimiter = createLimiter({
   windowMinutes: 1,
@@ -52,4 +60,4 @@ const apiLimiter = createLimiter({
   keyGenerator: (req) => `api:${req.client?.id || req.ip}`,
 });
 
-module.exports = { tokenLimiter, validateLimiter, apiLimiter, pageLimiter, resetLimiter };
+module.exports = { tokenLimiter, validateLimiter, apiLimiter, pageLimiter, resetLimiter, adminLimiter };

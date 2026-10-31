@@ -9,6 +9,7 @@ const openapiSpec = require('./docs/openapi');
 const routes = require('./routes');
 const { wellKnown, oidc } = require('./modules/oidc/oidc.routes');
 const loginPages = require('./modules/login/login.routes');
+const adminPages = require('./modules/admin/admin.routes');
 const notFound = require('./middlewares/notFound');
 const errorHandler = require('./middlewares/errorHandler');
 
@@ -54,6 +55,7 @@ app.use('/api/v1', routes);
 // Stage 2: single sign-on for the browser apps
 app.use('/.well-known', wellKnown);
 app.use('/oidc', oidc);
+app.use('/admin', adminPages);
 app.use('/', loginPages);
 
 app.use(notFound);

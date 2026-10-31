@@ -20,6 +20,7 @@
     <% } %>
 
     <% if (session) { %>
+      <% if (session.role === 'ADMIN') { %><a class="button" href="/admin/users">Manage users</a><% } %>
       <a class="button secondary" href="/account/password">Change password</a>
       <a class="button secondary" href="/oidc/logout">Log out of ELEFEZ FARM</a>
     <% } else { %>
