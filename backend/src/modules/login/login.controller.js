@@ -27,11 +27,14 @@ const activeSession = (req) => (req.ssoSession?.isActive() ? req.ssoSession : nu
 
 const pendingSession = (req) => (req.ssoSession && req.ssoSession.stage !== 'ACTIVE' ? req.ssoSession : null);
 
-// KandangID home: who is logged in and which apps use this account
+// KandangID home: who is logged in and which apps use this account.
+// Each app links to its own /login, which starts single sign-on at once, so one click lands inside the app already logged in.
 const home = asyncHandler(async (req, res) => {
   const session = activeSession(req);
   const clients = await Client.findAll({ where: { isActive: true }, order: [['name', 'ASC']] });
-  const apps = clients.filter((client) => client.allowedOrigins.length).map((client) => ({ name: client.name, url: client.allowedOrigins[0] }));
+  const apps = clients
+    .filter((client) => client.allowedOrigins.length)
+    .map((client) => ({ name: client.name, url: client.allowedOrigins[0], loginUrl: `${client.allowedOrigins[0]}/login` }));
   res.render('home', { session, apps });
 });
 

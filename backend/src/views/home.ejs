@@ -14,7 +14,7 @@
     <% if (apps.length) { %>
       <ul class="apps">
         <% apps.forEach(function (app) { %>
-          <li><a href="<%= app.url %>"><strong><%= app.name %></strong><span><%= app.url.replace(/^https?:\/\//, '') %></span></a></li>
+          <li><a href="<%= app.loginUrl %>"><strong><%= app.name %></strong><span><%= app.url.replace(/^https?:\/\//, '') %></span></a></li>
         <% }) %>
       </ul>
     <% } %>

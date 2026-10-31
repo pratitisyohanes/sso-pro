@@ -303,6 +303,16 @@ describe('login page', () => {
   });
 });
 
+describe('home page', () => {
+  test('links every app to its own /login so one click lands there already signed in', async () => {
+    Client.findAll.mockResolvedValue([posWeb]);
+    const res = await request(app).get('/');
+    expect(res.status).toBe(200);
+    expect(res.text).toContain(`href="${ORIGIN}/login"`);
+    expect(res.text).not.toContain(`href="${ORIGIN}"`);
+  });
+});
+
 describe('logout', () => {
   test('ends the session and returns to a registered address', async () => {
     const session = makeSession();
