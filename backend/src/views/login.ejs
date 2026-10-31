@@ -19,7 +19,7 @@
       <button type="submit">Log in</button>
     </form>
 
-    <% if (mailEnabled) { %><p class="foot"><a href="/forgot">Forgot your password?</a></p><% } %>
+    <p class="foot"><a href="/forgot">Forgot your password?</a></p>
 
     <p class="foot">No account yet? <a href="/register<%= returnTo !== '/' ? '?return_to=' + encodeURIComponent(returnTo) : '' %>">Create one</a></p>
 <%- include('partials/bottom') %>

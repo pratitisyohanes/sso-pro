@@ -11,8 +11,14 @@ const contextOf = (req) => ({ ip: req.ip, userAgent: req.get('user-agent'), clie
 const renderMessage = (res, { status = 200, title, message, tone = 'error', link }) =>
   res.status(status).render('message', { title, message, tone, link });
 
-const mailOffMessage = (res) =>
-  renderMessage(res, { status: 503, title: 'Not available', message: 'Password reset by email is not set up yet. Please contact the administrator.' });
+// Without email there is no form: the page says how to reach the administrator, who creates the link (npm run user:reset-link)
+const contactAdminMessage = (res) =>
+  renderMessage(res, {
+    title: 'Forgot your password?',
+    message: `Resetting by email is not available yet. Contact the administrator${env.SUPPORT_CONTACT ? ` (${env.SUPPORT_CONTACT})` : ''} and ask for a reset link. You choose the new password yourself on that link.`,
+    tone: 'ok',
+    link: { href: '/login', label: 'Back to log in' },
+  });
 
 const invalidLinkMessage = (res) =>
   renderMessage(res, {
@@ -24,12 +30,12 @@ const invalidLinkMessage = (res) =>
 
 // Forgot password: ask for the email address
 const showForgot = (req, res) => {
-  if (!env.MAIL_ENABLED) return mailOffMessage(res);
+  if (!env.MAIL_ENABLED) return contactAdminMessage(res);
   return res.render('forgot', { email: '', errors: {} });
 };
 
 const forgot = asyncHandler(async (req, res) => {
-  if (!env.MAIL_ENABLED) return mailOffMessage(res);
+  if (!env.MAIL_ENABLED) return contactAdminMessage(res);
 
   const parsed = forgotFormSchema.safeParse(req.body);
   if (!parsed.success) return res.status(422).render('forgot', { email: req.body.email || '', errors: fieldErrors(parsed.error) });

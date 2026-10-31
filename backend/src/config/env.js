@@ -54,6 +54,8 @@ const envSchema = z.object({
   SMTP_USER: blankAsUndefined(z.string().min(1).optional()),
   SMTP_PASSWORD: blankAsUndefined(z.string().min(1).optional()),
   MAIL_FROM: blankAsUndefined(z.string().min(1).optional()),
+  // Without email, the forgot-password page tells people how to reach the administrator, e.g. "WhatsApp 0812-3456-7890"
+  SUPPORT_CONTACT: blankAsUndefined(z.string().min(1).max(150).optional()),
 });
 
 const requireTogether = (data, ctx) => {

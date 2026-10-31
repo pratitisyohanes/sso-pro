@@ -25,6 +25,16 @@ const sendInBackground = (work) =>
 const endSessions = (userId, exceptSessionId) =>
   SsoSession.destroy({ where: { userId, ...(exceptSessionId && { id: { [Op.ne]: exceptSessionId } }) } });
 
+// Makes one reset link for an account. Older unused links are marked used (not deleted), so they still count towards the hourly limit.
+// Used by the email request below and by the administrator script (npm run user:reset-link)
+const createResetLink = async (account, { ip, minutes = LINK_MINUTES } = {}) => {
+  await PasswordReset.update({ usedAt: new Date() }, { where: { userId: account.id, usedAt: null } });
+  const token = randomToken();
+  const expiresAt = new Date(Date.now() + minutes * MINUTE_MS);
+  await PasswordReset.create({ userId: account.id, tokenHash: sha256(token), expiresAt, ip });
+  return { link: `${env.PUBLIC_URL}/reset?token=${encodeURIComponent(token)}`, expiresAt };
+};
+
 // The answer to "I forgot my password" is the same whether or not the email exists (no account guessing),
 // and the email is sent after the answer, so the response time does not give it away either
 const requestReset = async (email, { ip }) => {
@@ -36,13 +46,10 @@ const requestReset = async (email, { ip }) => {
   const recent = await PasswordReset.count({ where: { userId: account.id, createdAt: { [Op.gt]: new Date(Date.now() - HOUR_MS) } } });
   if (recent >= MAX_REQUESTS_PER_HOUR) return log('THROTTLED');
 
-  // Only the newest link works. Old ones are marked used (not deleted) so they still count towards the hourly limit
-  await PasswordReset.update({ usedAt: new Date() }, { where: { userId: account.id, usedAt: null } });
-  const token = randomToken();
-  await PasswordReset.create({ userId: account.id, tokenHash: sha256(token), expiresAt: new Date(Date.now() + LINK_MINUTES * MINUTE_MS), ip });
+  // Only the newest link works
+  const { link } = await createResetLink(account, { ip });
   await log('SUCCESS');
 
-  const link = `${env.PUBLIC_URL}/reset?token=${encodeURIComponent(token)}`;
   sendInBackground(() => mailer.sendPasswordReset({ to: account.email, name: account.name, link, minutes: LINK_MINUTES }));
   return undefined;
 };
@@ -81,4 +88,4 @@ const changePassword = async (session, { currentPassword, newPassword }, context
   if (env.MAIL_ENABLED) sendInBackground(() => mailer.sendPasswordChanged({ to: session.email, name: session.name }));
 };
 
-module.exports = { requestReset, findValidReset, resetPassword, changePassword, LINK_MINUTES };
+module.exports = { createResetLink, requestReset, findValidReset, resetPassword, changePassword, LINK_MINUTES };

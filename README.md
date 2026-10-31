@@ -91,7 +91,7 @@ Create a test account on the KandangID register page (`/register`), or from eith
 | GET/POST | `/login` | browser | Email + password (LDAP bind), CSRF-protected |
 | GET/POST | `/mfa` | browser | Code from the authenticator app, or QR setup for admins |
 | GET/POST | `/register` | browser | New LDAP entry in `cn=customers`, then logged in |
-| GET/POST | `/forgot` | browser | Asks for an email and sends a reset link (only when `SMTP_HOST` is set) |
+| GET/POST | `/forgot` | browser | Asks for an email and sends a reset link; without `SMTP_HOST` it says to contact the administrator |
 | GET/POST | `/reset?token=…` | browser | Sets a new password from the emailed link; the link works once for 30 minutes |
 | GET/POST | `/account/password` | browser | Change password while logged in; other devices are logged out |
 | GET | `/oidc/authorize` | browser | Start of the OIDC flow; an active session gets a code without a form |
@@ -111,9 +111,16 @@ In production Nginx (`deploy/nginx/sso.pratitis.net.conf`) answers 404 for `/oau
 ## Forgot password and change password
 
 - **Change password** (`/account/password`) needs the current password and a login session. Afterwards every other session of that account ends.
-- **Forgot password** sends a one-time link by email. Only the SHA-256 of the token is stored; a link expires after 30 minutes, a new request cancels older links, and an account gets at most 3 links per hour. The page answers the same way whether or not the email exists, so it cannot be used to find out who has an account.
-- **Email setup** (Gmail): turn on 2-Step Verification, create an App Password at <https://myaccount.google.com/apppasswords>, then set `SMTP_HOST=smtp.gmail.com`, `SMTP_USER` and `SMTP_PASSWORD` in `backend/.env` (see `.env.example`) and restart. Without `SMTP_HOST` the feature stays off and the login page shows no link.
-- **Administrator reset**, when email is not available:
+- **Forgot password** works in two modes, chosen by `SMTP_HOST` in `backend/.env`. In both, the user opens a one-time link and chooses the new password; only the SHA-256 of the token is stored, a new link cancels older ones, and every session of the account ends after the reset.
+  - **Without email** (default): the page tells the user to ask the administrator (`SUPPORT_CONTACT` is shown there). The administrator creates the link on the VPS and sends it to the owner by any channel:
+
+    ```bash
+    npm run user:reset-link -- someone@example.com        # link works for 60 minutes
+    npm run user:reset-link -- someone@example.com 15     # or choose 5 to 1440 minutes
+    ```
+
+  - **With email** (Gmail): turn on 2-Step Verification, create an App Password at <https://myaccount.google.com/apppasswords>, then set `SMTP_HOST=smtp.gmail.com`, `SMTP_USER` and `SMTP_PASSWORD` (see `.env.example`) and restart. The page then asks for an email and sends the link itself: it expires after 30 minutes, an account gets at most 3 links per hour, and the page answers the same whether or not the email exists, so it cannot be used to find out who has an account.
+- **Set a password directly** (the administrator types it, last resort):
 
 ```bash
 read -s -p "New password: " NEW_PASSWORD; echo
