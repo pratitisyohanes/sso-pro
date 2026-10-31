@@ -1,4 +1,5 @@
 const ldap = require('../../ldap/ldap.gateway');
+const { AuthorizationCode, MfaFactor, PasswordReset, RefreshToken } = require('../../models');
 const ApiError = require('../../utils/ApiError');
 const audit = require('../../utils/audit');
 const passwordService = require('../login/password.service');
@@ -52,4 +53,25 @@ const changeEmail = async (admin, target, email, { ip }) => {
   return updated;
 };
 
-module.exports = { getUser, search, canManage, createResetLink, changeEmail, LINK_MINUTES };
+// Deleting removes the login for good. Booking keeps its own copy of the profile (its bookings point at it) and the audit log
+// keeps its history, so only what KandangID itself holds about the account is cleared. Administrators are never deleted from the page
+const deleteUser = async (admin, target, { ip }) => {
+  if (target.role === 'ADMIN') throw ApiError.forbidden('Administrator accounts cannot be deleted from this page');
+
+  try {
+    await ldap.deletePerson(target.id);
+  } catch (error) {
+    console.error('The directory refused to delete an account:', error.message);
+    throw new ApiError(503, 'The directory could not delete this account. Nothing was changed.');
+  }
+
+  // Codes and refresh tokens first: both point at the sessions that are removed next
+  await RefreshToken.destroy({ where: { userId: target.id } });
+  await AuthorizationCode.destroy({ where: { userId: target.id } });
+  await passwordService.endSessions(target.id);
+  await PasswordReset.destroy({ where: { userId: target.id } });
+  await MfaFactor.destroy({ where: { userId: target.id } });
+  await record(admin, target, 'ADMIN_DELETE_USER', ip);
+};
+
+module.exports = { getUser, search, canManage, createResetLink, changeEmail, deleteUser, LINK_MINUTES };

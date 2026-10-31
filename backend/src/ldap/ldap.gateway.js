@@ -177,6 +177,25 @@ const setAccess = (uid, { role, disabled }) =>
     return loadAccount(client, entry);
   });
 
+// Removes the account. The entry goes first, because that is what stops the login; the group memberships are tidied afterwards.
+// A groupOfNames must keep one member, so the last member of a group cannot be removed; that leftover reference is harmless
+const deletePerson = (uid) =>
+  withClient(async (client) => {
+    await bindService(client);
+    const dn = userDn(uid);
+    const groups = await readGroups(client, dn);
+
+    await client.del(dn);
+
+    for (const name of groups) {
+      try {
+        await client.modify(groupDn(name), [memberChange('delete', dn)]);
+      } catch (error) {
+        console.error(`Could not remove ${dn} from group ${name}:`, error.message);
+      }
+    }
+  });
+
 // Administrator search: part of a name or email (empty lists everyone), sorted by name and cut to `limit`.
 // SubstringFilter escapes * ( ) \ in the term, so it cannot change the filter
 const searchPeople = (term, limit = 20) =>
@@ -195,4 +214,4 @@ const searchPeople = (term, limit = 20) =>
 // Health check: can the service account still bind?
 const ping = () => withClient(bindService);
 
-module.exports = { verifyCredentials, findById, findByEmail, searchPeople, createPerson, updatePerson, checkPassword, setAccess, ping };
+module.exports = { verifyCredentials, findById, findByEmail, searchPeople, createPerson, updatePerson, deletePerson, checkPassword, setAccess, ping };

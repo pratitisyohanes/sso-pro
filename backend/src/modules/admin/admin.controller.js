@@ -47,7 +47,8 @@ const loadTarget = async (req, res) => {
 
 const list = asyncHandler(async (req, res) => {
   const q = String(req.query.q ?? '').trim().slice(0, 100);
-  res.render('admin-users', { q, people: await adminService.search(q) });
+  const notice = req.query.deleted === '1' ? 'Account deleted. It can no longer log in.' : null;
+  res.render('admin-users', { q, people: await adminService.search(q), notice });
 });
 
 const showUser = asyncHandler(async (req, res) => {
@@ -87,4 +88,24 @@ const changeEmail = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { list, showUser, resetLink, changeEmail };
+// The administrator has to type the account's email, so a stray click cannot delete anyone
+const remove = asyncHandler(async (req, res) => {
+  const target = await loadTarget(req, res);
+  if (!target) return;
+
+  const typed = String(req.body?.confirm ?? '').trim().toLowerCase();
+  if (typed !== target.email.toLowerCase()) {
+    renderUser(req, res, target, { status: 422, error: 'The email you typed does not match. Nothing was deleted.' });
+    return;
+  }
+
+  try {
+    await adminService.deleteUser(req.admin, target, contextOf(req));
+    res.redirect('/admin/users?deleted=1');
+  } catch (error) {
+    if (!(error instanceof ApiError)) throw error;
+    renderUser(req, res, target, { status: error.statusCode, error: error.message });
+  }
+});
+
+module.exports = { list, showUser, resetLink, changeEmail, remove };

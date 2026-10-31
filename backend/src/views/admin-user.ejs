@@ -38,6 +38,19 @@
           <button type="submit">Change email</button>
         </form>
       </div>
+      <% if (target.role !== 'ADMIN') { %>
+        <div class="section">
+          <h2>Delete account</h2>
+          <p class="hint">The person can no longer log in to Booking or POS. Booking and POS keep their own copy of the profile and its bookings. This cannot be undone.</p>
+          <form method="post" action="/admin/users/<%= target.id %>/delete" novalidate>
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <label for="confirm">Type <strong><%= target.email %></strong> to confirm
+              <input id="confirm" name="confirm" type="text" autocomplete="off" required>
+            </label>
+            <button type="submit" class="danger">Delete account</button>
+          </form>
+        </div>
+      <% } %>
     <% } else { %>
       <div class="section">
         <p class="hint">Administrator accounts are reset on the server, not here. Run <strong>npm run user:reset-link -- <%= target.email %></strong> on the VPS.</p>

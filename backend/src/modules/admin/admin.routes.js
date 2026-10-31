@@ -15,5 +15,6 @@ router.get('/users', controller.list);
 router.get('/users/:id', controller.showUser);
 router.post('/users/:id/reset-link', form, verifyCsrf, adminLimiter, controller.resetLink);
 router.post('/users/:id/email', form, verifyCsrf, adminLimiter, controller.changeEmail);
+router.post('/users/:id/delete', form, verifyCsrf, adminLimiter, controller.remove);
 
 module.exports = router;

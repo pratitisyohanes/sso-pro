@@ -10,6 +10,7 @@ jest.mock('../../src/ldap/ldap.gateway', () => ({
   searchPeople: jest.fn(),
   createPerson: jest.fn(),
   updatePerson: jest.fn(),
+  deletePerson: jest.fn(),
   checkPassword: jest.fn(),
   setAccess: jest.fn(),
   ping: jest.fn(),
@@ -22,14 +23,14 @@ jest.mock('../../src/models', () => ({
   Client: { findByPk: jest.fn(), findAll: jest.fn().mockResolvedValue([]) },
   AuthEvent: { create: jest.fn() },
   SsoSession: { findOne: jest.fn(), findByPk: jest.fn(), create: jest.fn(), destroy: jest.fn() },
-  AuthorizationCode: { create: jest.fn(), findByPk: jest.fn() },
-  RefreshToken: { create: jest.fn(), findOne: jest.fn(), update: jest.fn() },
-  MfaFactor: { findByPk: jest.fn(), create: jest.fn() },
-  PasswordReset: { count: jest.fn(), update: jest.fn(), create: jest.fn(), findOne: jest.fn() },
+  AuthorizationCode: { create: jest.fn(), findByPk: jest.fn(), destroy: jest.fn() },
+  RefreshToken: { create: jest.fn(), findOne: jest.fn(), update: jest.fn(), destroy: jest.fn() },
+  MfaFactor: { findByPk: jest.fn(), create: jest.fn(), destroy: jest.fn() },
+  PasswordReset: { count: jest.fn(), update: jest.fn(), create: jest.fn(), findOne: jest.fn(), destroy: jest.fn() },
 }));
 
 const ldap = require('../../src/ldap/ldap.gateway');
-const { AuthEvent, SsoSession, PasswordReset } = require('../../src/models');
+const { AuthEvent, AuthorizationCode, MfaFactor, PasswordReset, RefreshToken, SsoSession } = require('../../src/models');
 const app = require('../../src/app');
 
 const sha256 = (value) => crypto.createHash('sha256').update(value).digest('hex');
@@ -244,5 +245,91 @@ describe('change email', () => {
     expect(res.status).toBe(200);
     expect(res.text).toContain('npm run user:reset-link');
     expect(res.text).not.toContain('Create reset link');
+  });
+});
+
+describe('delete account', () => {
+  beforeEach(() => loginAs(admin));
+
+  const remove = (target, confirm) => post(`/admin/users/${target.id}/delete`, { confirm });
+
+  test('removes the login and everything KandangID holds about the account', async () => {
+    const res = await remove(budi, 'Budi@Example.com');
+    expect(res.status).toBe(302);
+    expect(res.headers.location).toBe('/admin/users?deleted=1');
+
+    expect(ldap.deletePerson).toHaveBeenCalledWith(budi.id);
+    const byUser = { where: { userId: budi.id } };
+    expect(RefreshToken.destroy).toHaveBeenCalledWith(byUser);
+    expect(AuthorizationCode.destroy).toHaveBeenCalledWith(byUser);
+    expect(SsoSession.destroy).toHaveBeenCalledWith(byUser);
+    expect(PasswordReset.destroy).toHaveBeenCalledWith(byUser);
+    expect(MfaFactor.destroy).toHaveBeenCalledWith(byUser);
+  });
+
+  test('is written to the audit log with the administrator who did it', async () => {
+    await remove(budi, budi.email);
+    expect(AuthEvent.create).toHaveBeenCalledWith(expect.objectContaining({ action: 'ADMIN_DELETE_USER', userId: budi.id, username: 'budi@example.com by admin@example.com' }));
+  });
+
+  test('a wrong or empty confirmation deletes nothing', async () => {
+    const wrong = await remove(budi, 'siti@example.com');
+    expect(wrong.status).toBe(422);
+    expect(wrong.text).toContain('does not match');
+    const empty = await remove(budi, '');
+    expect(empty.status).toBe(422);
+    expect(ldap.deletePerson).not.toHaveBeenCalled();
+    expect(SsoSession.destroy).not.toHaveBeenCalled();
+  });
+
+  test('administrators cannot be deleted from the page, not even the one logged in', async () => {
+    const other = await remove(otherAdmin, otherAdmin.email);
+    expect(other.status).toBe(403);
+    const self = await remove(admin, admin.email);
+    expect(self.status).toBe(403);
+    expect(ldap.deletePerson).not.toHaveBeenCalled();
+  });
+
+  test('if the directory refuses, nothing else is cleared and the page says so', async () => {
+    ldap.deletePerson.mockRejectedValueOnce(new Error('insufficient access'));
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const res = await remove(budi, budi.email);
+    spy.mockRestore();
+
+    expect(res.status).toBe(503);
+    expect(res.text).toContain('Nothing was changed');
+    expect(SsoSession.destroy).not.toHaveBeenCalled();
+    expect(AuthEvent.create).not.toHaveBeenCalled();
+  });
+
+  test('a post without the CSRF token is refused', async () => {
+    const res = await withSession(request(app).post(`/admin/users/${budi.id}/delete`).type('form').send({ confirm: budi.email }));
+    expect(res.status).toBe(403);
+    expect(ldap.deletePerson).not.toHaveBeenCalled();
+  });
+
+  test('a customer who is not an administrator cannot reach it', async () => {
+    loginAs(budi);
+    const res = await post(`/admin/users/${siti.id}/delete`, { confirm: siti.email });
+    expect(res.status).toBe(403);
+    expect(ldap.deletePerson).not.toHaveBeenCalled();
+  });
+
+  test('the form is on a customer page but not on an administrator page', async () => {
+    const customer = await withSession(request(app).get(`/admin/users/${budi.id}`));
+    expect(customer.text).toContain('Delete account');
+    expect(customer.text).toContain(`/admin/users/${budi.id}/delete`);
+
+    const adminPage = await withSession(request(app).get(`/admin/users/${otherAdmin.id}`));
+    expect(adminPage.text).not.toContain('Delete account');
+    const own = await withSession(request(app).get(`/admin/users/${admin.id}`));
+    expect(own.text).not.toContain('Delete account');
+  });
+
+  test('the list shows a confirmation after a deletion', async () => {
+    const res = await withSession(request(app).get('/admin/users').query({ deleted: '1' }));
+    expect(res.text).toContain('Account deleted');
+    const plain = await withSession(request(app).get('/admin/users'));
+    expect(plain.text).not.toContain('Account deleted');
   });
 });
