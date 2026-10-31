@@ -41,7 +41,7 @@ const envSchema = z.object({
     (value) => (value === '' ? undefined : value),
     z.string().regex(/^[0-9a-f]{64}$/i, 'MFA_ENCRYPTION_KEY must be 64 hex characters').optional(),
   ),
-  MFA_ISSUER: z.string().min(1).default('KandangMart'),
+  MFA_ISSUER: z.string().min(1).default('ELEFEZ FARM'),
 });
 
 const requireTogether = (data, ctx) => {

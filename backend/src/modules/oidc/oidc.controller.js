@@ -56,7 +56,7 @@ const logout = asyncHandler(async (req, res) => {
 
   const target = await oidcService.postLogoutTarget(req.query);
   if (target) return res.redirect(target);
-  return res.render('message', { title: 'You are logged out', message: 'Your KandangID session has ended on this browser.', tone: 'ok' });
+  return res.render('message', { title: 'You are logged out', message: 'Your ELEFEZ FARM session has ended on this browser.', tone: 'ok' });
 });
 
 module.exports = { discovery, jwks, authorize, token, userinfo, logout };

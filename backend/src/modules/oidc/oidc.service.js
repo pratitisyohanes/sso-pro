@@ -29,7 +29,7 @@ const withParams = (url, params) => {
 const checkAuthorizeRequest = async (query) => {
   const client = await findWebClient(query.client_id);
   if (!client || !client.redirectUris.includes(query.redirect_uri)) {
-    return { fatal: 'This application or its return address is not registered with KandangID.' };
+    return { fatal: 'This application or its return address is not registered with ELEFEZ FARM.' };
   }
   const fail = (error, description) => ({ client, redirect: withParams(query.redirect_uri, { error, error_description: description, state: query.state }) });
   if (query.response_type !== 'code') return fail('unsupported_response_type', 'Only response_type=code is supported');

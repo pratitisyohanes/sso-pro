@@ -42,6 +42,7 @@ app.use(
     },
   }),
 );
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(cookieParser());
 app.use(express.json({ limit: '100kb' }));
 if (env.NODE_ENV !== 'test') app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
