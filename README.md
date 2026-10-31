@@ -80,7 +80,7 @@ VITE_SSO_CLIENT_ID=booking-web     # pos-web in the POS app
 
 Use `localhost` everywhere (not `127.0.0.1`) in browser-facing values: `SSO_ISSUER` must equal `PUBLIC_URL` exactly.
 
-Demo accounts (same as the fin-pro seeder): `admin@booking.com / Admin12345`, `budi@example.com / User12345`.
+Create a test account on the KandangID register page (`/register`), or from either web app.
 
 ## Pages and endpoints
 
