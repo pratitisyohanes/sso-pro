@@ -21,6 +21,14 @@ const pageLimiter = createLimiter({
     res.status(429).render('message', { title: 'Too many attempts', message: 'Wait 15 minutes before trying again.', tone: 'error' }),
 });
 
+// Reset forms cost an email each, so they get a tighter limit than login
+const resetLimiter = createLimiter({
+  windowMinutes: 15,
+  limit: 10,
+  handler: (req, res) =>
+    res.status(429).render('message', { title: 'Too many attempts', message: 'Wait 15 minutes before trying again.', tone: 'error' }),
+});
+
 // Every caller is a server on 127.0.0.1, so limits are keyed by client and username instead of IP
 const tokenLimiter = createLimiter({
   windowMinutes: 1,
@@ -44,4 +52,4 @@ const apiLimiter = createLimiter({
   keyGenerator: (req) => `api:${req.client?.id || req.ip}`,
 });
 
-module.exports = { tokenLimiter, validateLimiter, apiLimiter, pageLimiter };
+module.exports = { tokenLimiter, validateLimiter, apiLimiter, pageLimiter, resetLimiter };

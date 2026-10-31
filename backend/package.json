@@ -13,7 +13,8 @@
     "keys:generate": "node scripts/generate-keys.js",
     "client:create": "node scripts/create-client.js",
     "client:web": "node scripts/create-web-client.js",
-    "ldap:hash": "node scripts/hash-password.js"
+    "ldap:hash": "node scripts/hash-password.js",
+    "user:reset-password": "node scripts/reset-password.js"
   },
   "engines": {
     "node": ">=20"
@@ -35,6 +36,7 @@
     "jose": "^5.10.0",
     "ldapts": "^9.2.0",
     "morgan": "^1.12.1",
+    "nodemailer": "^10.3.1",
     "otplib": "^12.0.1",
     "pg": "^8.23.1",
     "pg-hstore": "^2.3.4",

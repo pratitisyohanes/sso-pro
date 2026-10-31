@@ -1,5 +1,6 @@
 const asyncHandler = require('../../utils/asyncHandler');
 const ApiError = require('../../utils/ApiError');
+const env = require('../../config/env');
 const { Client } = require('../../models');
 const { setSessionCookie, clearSessionCookie } = require('../../middlewares/ssoSession');
 const oidcService = require('../oidc/oidc.service');
@@ -38,15 +39,18 @@ const home = asyncHandler(async (req, res) => {
   res.render('home', { session, apps });
 });
 
-const renderLogin = async (res, { status = 200, returnTo, email = '', errors = {}, error = null }) => {
+// Messages that other pages may show on the login page, picked by a fixed code so no text from the address is ever printed
+const NOTICES = { 'password-changed': 'Password changed. Log in with your new password.' };
+
+const renderLogin = async (res, { status = 200, returnTo, email = '', errors = {}, error = null, notice = null }) => {
   const client = await clientOf(returnTo);
-  res.status(status).render('login', { returnTo, email, errors, error, appName: client?.name });
+  res.status(status).render('login', { returnTo, email, errors, error, notice, appName: client?.name, mailEnabled: env.MAIL_ENABLED });
 };
 
 const showLogin = asyncHandler(async (req, res) => {
   const returnTo = returnOf(req);
   if (activeSession(req)) return res.redirect(returnTo);
-  return renderLogin(res, { returnTo });
+  return renderLogin(res, { returnTo, notice: NOTICES[req.query.notice] ?? null });
 });
 
 const login = asyncHandler(async (req, res) => {

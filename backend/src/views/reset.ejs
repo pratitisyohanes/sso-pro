@@ -1,0 +1,18 @@
+<%- include('partials/top', { title: 'Choose a new password' }) %>
+    <h1>Choose a new password</h1>
+    <p class="sub">You will be logged out everywhere and can log in with the new password.</p>
+
+    <form method="post" action="/reset" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <input type="hidden" name="token" value="<%= token %>">
+      <label for="password">New password
+        <input id="password" name="password" type="password" autocomplete="new-password" required autofocus aria-invalid="<%= errors.password ? 'true' : 'false' %>">
+        <% if (errors.password) { %><span class="field-error"><%= errors.password %></span><% } else { %><span class="hint">At least 8 characters with a letter and a number</span><% } %>
+      </label>
+      <label for="confirmPassword">Repeat new password
+        <input id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" required aria-invalid="<%= errors.confirmPassword ? 'true' : 'false' %>">
+        <% if (errors.confirmPassword) { %><span class="field-error"><%= errors.confirmPassword %></span><% } %>
+      </label>
+      <button type="submit">Save new password</button>
+    </form>
+<%- include('partials/bottom') %>

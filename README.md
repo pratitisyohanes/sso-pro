@@ -16,7 +16,8 @@ Two-factor login (TOTP) happens on the KandangID page. booking-api and pos-api v
 | Layer | Technology |
 | --- | --- |
 | Runtime | Node.js 20, Express 4 |
-| Login pages | EJS (server-rendered), one inline stylesheet, no client JavaScript |
+| Login pages | EJS (server-rendered), one inline stylesheet, one small script for the show/hide password button |
+| Email | `nodemailer` over SMTP (Gmail with an App Password), only for password reset |
 | Directory | OpenLDAP (`osixia/openldap` on the laptop, `slapd` on the VPS), client `ldapts` |
 | Tokens | `jose` (RS256, JWKS) |
 | Second factor | `otplib` (TOTP) + `qrcode`, secrets encrypted with AES-256-GCM |
@@ -90,6 +91,9 @@ Create a test account on the KandangID register page (`/register`), or from eith
 | GET/POST | `/login` | browser | Email + password (LDAP bind), CSRF-protected |
 | GET/POST | `/mfa` | browser | Code from the authenticator app, or QR setup for admins |
 | GET/POST | `/register` | browser | New LDAP entry in `cn=customers`, then logged in |
+| GET/POST | `/forgot` | browser | Asks for an email and sends a reset link (only when `SMTP_HOST` is set) |
+| GET/POST | `/reset?token=…` | browser | Sets a new password from the emailed link; the link works once for 30 minutes |
+| GET/POST | `/account/password` | browser | Change password while logged in; other devices are logged out |
 | GET | `/oidc/authorize` | browser | Start of the OIDC flow; an active session gets a code without a form |
 | POST | `/oidc/token` | web app (fetch) | `authorization_code` (PKCE) and `refresh_token` (rotation) |
 | GET | `/oidc/userinfo` | web app | Claims of the current access token |
@@ -103,6 +107,18 @@ Create a test account on the KandangID register page (`/register`), or from eith
 | GET | `/api/docs` | developer | Swagger UI for the server-to-server API |
 
 In production Nginx (`deploy/nginx/sso.pratitis.net.conf`) answers 404 for `/oauth/` and `/api/`; those stay reachable on 127.0.0.1 only.
+
+## Forgot password and change password
+
+- **Change password** (`/account/password`) needs the current password and a login session. Afterwards every other session of that account ends.
+- **Forgot password** sends a one-time link by email. Only the SHA-256 of the token is stored; a link expires after 30 minutes, a new request cancels older links, and an account gets at most 3 links per hour. The page answers the same way whether or not the email exists, so it cannot be used to find out who has an account.
+- **Email setup** (Gmail): turn on 2-Step Verification, create an App Password at <https://myaccount.google.com/apppasswords>, then set `SMTP_HOST=smtp.gmail.com`, `SMTP_USER` and `SMTP_PASSWORD` in `backend/.env` (see `.env.example`) and restart. Without `SMTP_HOST` the feature stays off and the login page shows no link.
+- **Administrator reset**, when email is not available:
+
+```bash
+read -s -p "New password: " NEW_PASSWORD; echo
+NEW_PASSWORD="$NEW_PASSWORD" npm run user:reset-password -- someone@example.com
+```
 
 ## Project Structure
 

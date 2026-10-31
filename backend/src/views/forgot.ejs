@@ -1,0 +1,15 @@
+<%- include('partials/top', { title: 'Forgot password' }) %>
+    <h1>Forgot your password?</h1>
+    <p class="sub">Enter your email and we will send you a link to choose a new one.</p>
+
+    <form method="post" action="/forgot" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label for="email">Email
+        <input id="email" name="email" type="email" autocomplete="email" value="<%= email %>" required autofocus aria-invalid="<%= errors.email ? 'true' : 'false' %>">
+        <% if (errors.email) { %><span class="field-error"><%= errors.email %></span><% } %>
+      </label>
+      <button type="submit">Send reset link</button>
+    </form>
+
+    <p class="foot"><a href="/login">Back to log in</a></p>
+<%- include('partials/bottom') %>

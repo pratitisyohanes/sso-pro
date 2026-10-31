@@ -16,6 +16,7 @@ const models = {
   AuthorizationCode: require('./authorizationCode')(sequelize, DataTypes),
   RefreshToken: require('./refreshToken')(sequelize, DataTypes),
   MfaFactor: require('./mfaFactor')(sequelize, DataTypes),
+  PasswordReset: require('./passwordReset')(sequelize, DataTypes),
 };
 
 Object.values(models).forEach((model) => model.associate?.(models));

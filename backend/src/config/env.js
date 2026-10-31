@@ -4,6 +4,9 @@ const applyDatabaseUrl = require('./databaseUrl');
 
 applyDatabaseUrl();
 
+// An empty value in .env ("SMTP_HOST=") means "not set"
+const blankAsUndefined = (schema) => z.preprocess((value) => (value === '' ? undefined : value), schema);
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   // Only other services on this machine call auth-service, so it never listens on a public address
@@ -42,11 +45,25 @@ const envSchema = z.object({
     z.string().regex(/^[0-9a-f]{64}$/i, 'MFA_ENCRYPTION_KEY must be 64 hex characters').optional(),
   ),
   MFA_ISSUER: z.string().min(1).default('ELEFEZ FARM'),
+
+  // Password reset by email. Leave SMTP_HOST empty to switch the feature off.
+  // Gmail: smtp.gmail.com with port 465 and SMTP_SECURE=true (or port 587 with SMTP_SECURE=false), using an App Password
+  SMTP_HOST: blankAsUndefined(z.string().min(1).optional()),
+  SMTP_PORT: z.coerce.number().int().positive().default(465),
+  SMTP_SECURE: z.enum(['true', 'false']).default('true').transform((value) => value === 'true'),
+  SMTP_USER: blankAsUndefined(z.string().min(1).optional()),
+  SMTP_PASSWORD: blankAsUndefined(z.string().min(1).optional()),
+  MAIL_FROM: blankAsUndefined(z.string().min(1).optional()),
 });
 
 const requireTogether = (data, ctx) => {
   if (data.MFA_ENFORCE_ADMIN && !data.MFA_ENCRYPTION_KEY) {
     ctx.addIssue({ code: 'custom', path: ['MFA_ENCRYPTION_KEY'], message: 'MFA_ENCRYPTION_KEY is required when MFA_ENFORCE_ADMIN=true' });
+  }
+  if (data.SMTP_HOST) {
+    ['SMTP_USER', 'SMTP_PASSWORD'].forEach((key) => {
+      if (!data[key]) ctx.addIssue({ code: 'custom', path: [key], message: `${key} is required when SMTP_HOST is set` });
+    });
   }
 };
 
@@ -57,8 +74,14 @@ if (!parsed.success) {
   process.exit(1);
 }
 
+// Google shows an App Password in groups of four ("abcd efgh ijkl mnop"); the spaces are not part of it
+const smtpPassword = parsed.data.SMTP_PASSWORD?.replace(/\s+/g, '');
+
 module.exports = {
   ...parsed.data,
   PUBLIC_URL: parsed.data.PUBLIC_URL.replace(/\/+$/, ''),
   USER_AUDIENCES: parsed.data.USER_AUDIENCE.split(',').map((name) => name.trim()).filter(Boolean),
+  SMTP_PASSWORD: smtpPassword,
+  MAIL_ENABLED: Boolean(parsed.data.SMTP_HOST && parsed.data.SMTP_USER && smtpPassword),
+  MAIL_FROM: parsed.data.MAIL_FROM || (parsed.data.SMTP_USER ? `"${parsed.data.MFA_ISSUER}" <${parsed.data.SMTP_USER}>` : undefined),
 };

@@ -3,6 +3,7 @@
     <p class="sub"><% if (appName) { %>to continue to <strong><%= appName %></strong><% } else { %>with your ELEFEZ FARM account<% } %></p>
 
     <% if (error) { %><div class="alert" role="alert"><%= error %></div><% } %>
+    <% if (notice) { %><div class="alert ok" role="status"><%= notice %></div><% } %>
 
     <form method="post" action="/login" novalidate>
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
@@ -17,6 +18,8 @@
       </label>
       <button type="submit">Log in</button>
     </form>
+
+    <% if (mailEnabled) { %><p class="foot"><a href="/forgot">Forgot your password?</a></p><% } %>
 
     <p class="foot">No account yet? <a href="/register<%= returnTo !== '/' ? '?return_to=' + encodeURIComponent(returnTo) : '' %>">Create one</a></p>
 <%- include('partials/bottom') %>

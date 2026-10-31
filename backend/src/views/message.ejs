@@ -1,5 +1,6 @@
 <%- include('partials/top', { title: title }) %>
     <h1><%= title %></h1>
     <div class="alert<%= tone === 'ok' ? ' ok' : '' %>" role="<%= tone === 'ok' ? 'status' : 'alert' %>"><%= message %></div>
+    <% if (locals.link) { %><a class="button" href="<%= link.href %>"><%= link.label %></a><% } %>
     <a class="button secondary" href="/">Go to ELEFEZ FARM home</a>
 <%- include('partials/bottom') %>
