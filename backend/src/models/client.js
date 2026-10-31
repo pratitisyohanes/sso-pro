@@ -1,6 +1,8 @@
 // An application allowed to use KandangID: a server with a secret (booking-api) or a browser app with return addresses (booking-web)
 module.exports = (sequelize, DataTypes) => {
-  const urls = { type: DataTypes.ARRAY(DataTypes.STRING(255)), allowNull: false, defaultValue: [] };
+  // A new definition for every attribute: Sequelize writes the column name into the object it receives,
+  // so one object shared by three attributes would map all of them to the same column
+  const urls = () => ({ type: DataTypes.ARRAY(DataTypes.STRING(255)), allowNull: false, defaultValue: [] });
 
   const Client = sequelize.define(
     'Client',
@@ -10,9 +12,9 @@ module.exports = (sequelize, DataTypes) => {
       // Null for public browser clients, which prove themselves with PKCE instead
       secretHash: { type: DataTypes.TEXT },
       scopes: { type: DataTypes.ARRAY(DataTypes.STRING(30)), allowNull: false, defaultValue: [] },
-      redirectUris: urls,
-      postLogoutRedirectUris: urls,
-      allowedOrigins: urls,
+      redirectUris: urls(),
+      postLogoutRedirectUris: urls(),
+      allowedOrigins: urls(),
       isActive: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
     },
     {
